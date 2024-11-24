@@ -11,7 +11,7 @@ function App() {
   });
   async function handleFormRaising(e) {
     e.preventDefault();
-    const response = await fetch("https://", {
+    const response = await fetch("http://localhost:8000/generateTicket", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -21,6 +21,7 @@ function App() {
     const data = response.json();
     console.log(data);
   }
+  
   const handleChangeRaising = (e) => {
     const name = e.target.name;
     const value = e.target.value;
@@ -86,6 +87,7 @@ function App() {
       <div className="filter-search">
         <h2>Filters and search</h2>
         <form onSubmit={handleFormFilter}>
+        <label htmlFor="status">status : </label>
         <select
             name="status"
             value={searchStatus}
@@ -98,6 +100,7 @@ function App() {
           </select>
           <br />
 
+          <label htmlFor="priority">priority : </label>
           <select
             name="priority"
             value={priority}
