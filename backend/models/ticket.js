@@ -15,6 +15,9 @@ const ticketSchema = mongoose.Schema({
     },
     priority:{
         type: String,
+    },
+    status:{
+        type: String,
     }
 })
 

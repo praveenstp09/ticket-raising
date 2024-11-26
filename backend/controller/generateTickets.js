@@ -2,17 +2,15 @@ const Ticket = require('../models/ticket.js')
 
 const generateTicket = async (req,res) =>{
     try{
-        const title = req.body.title
-        const description = req.body.description
-        const createdBy = req.body.createdBy
-        const priority = req.body.priority
-        await Ticket.create({
-            title,
-            description,
-            createdBy,
-            priority
-        })
-        res.status(201).json({message:'ticket has been generated'})
+        const ticket = new Ticket({
+            title: req.body.title,
+            description: req.body.description,
+            createdBy: req.body.createdBy,
+            status: 'Open',
+            priority: req.body.priority || 'Low',
+        });
+        const newTicket = await ticket.save()
+        res.status(201).json(newTicket)
     }catch(err){
         console.log(err)
     }
