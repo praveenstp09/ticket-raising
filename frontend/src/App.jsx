@@ -20,9 +20,22 @@ function App() {
       },
       body: JSON.stringify(formDataRaising),
     });
-    const data =await response.json();
+    const data = await response.json();
     console.log(data);
+    console.log(ticketsList);
 
+    if (data) {
+      setTicketsList((ticketsList) => [...ticketsList, data]);
+    } else {
+      console.log("error");
+    }
+    console.log(ticketsList);
+    setFormDataRaising({
+      title: "",
+      description: "",
+      createdBy: "",
+      priority: "low",
+    });
   }
 
   const handleChangeRaising = (e) => {
@@ -35,9 +48,9 @@ function App() {
     });
   };
 
-  const [filterDate, setFilterData] = useState({
-    filterStatus: "all",
-    filterPriority: "all",
+  const [filterData, setFilterData] = useState({
+    filterStatus: "All",
+    filterPriority: "All",
   });
 
   const handleChangeFilter = (e) => {
@@ -45,22 +58,53 @@ function App() {
     const value = e.target.value;
     console.log(name + " " + value);
     setFilterData({
-      ...formDataRaising,
+      ...filterData,
       [name]: value,
     });
   };
 
-  const [ticketsList,setTicketsList]=useState([])
+  const [ticketsList, setTicketsList] = useState([]);
 
   useEffect(() => {
     getTicketList();
-  }, [filterDate]);
+  }, []);
 
-  async function getTicketList(){
-    const resp=await fetch('http://localhost');
-    const data=resp.json();
-    console.log(data);
+  async function getTicketList() {
+    const resp = await fetch("http://localhost:8000/tickets");
+    const data = await resp.json();
+
     setTicketsList(data);
+  }
+  // console.log(ticketsList);
+
+  const filteredTickets = ticketsList.filter((ticket) => {
+    const statusFilter =
+      filterData.filterStatus === "All" ||
+      (ticket.status &&
+        ticket.status.toLowerCase() === filterData.filterStatus.toLowerCase());
+    const priorityFilter =
+      filterData.filterPriority === "All" ||
+      (ticket.priority &&
+        ticket.priority.toLowerCase() ===
+          filterData.filterPriority.toLowerCase());
+
+    return statusFilter && priorityFilter;
+  });
+
+  // console.log(filteredTickets);
+
+  async function handleDelete(id) {
+    const resp = await fetch(`http://localhost:8000/deleteTicket/${id}`, {
+      method: "DELETE",
+    });
+    const data = await resp.json();
+
+    if (resp.ok) {
+      console.log(data.message);
+      setTicketsList((prevTickets) => prevTickets.filter((ticket) => ticket._id !== id));
+    } else {
+      console.error("Error deleting ticket:", data.message || "Unknown error");
+    }
   }
 
   return (
@@ -116,29 +160,25 @@ function App() {
         <div className="filter-search">
           <h2>Filters and search</h2>
 
-          <label htmlFor="status">status : </label>
+          <label htmlFor="filterStatus">status : </label>
           <select
-            name="status"
-            value={filterDate.filterStatus}
+            name="filterStatus"
+            value={filterData.filterStatus}
             onChange={handleChangeFilter}
           >
-            <option value="all" selected>
-              all
-            </option>
-            <option value="solved">Solved</option>
-            <option value="unsolved">Unsolved</option>
+            <option value="All">All</option>
+            <option value="open">Solved</option>
+            <option value="close">Unsolved</option>
           </select>
           <br />
 
-          <label htmlFor="priority">priority : </label>
+          <label htmlFor="filterPriority">priority : </label>
           <select
-            name="priority"
-            value={filterDate.filterPriority}
+            name="filterPriority"
+            value={filterData.filterPriority}
             onChange={handleChangeFilter}
           >
-            <option value="all" selected>
-              All
-            </option>
+            <option value="All">All</option>
             <option value="low">Low</option>
             <option value="medium">Medium</option>
             <option value="high">High</option>
@@ -147,17 +187,26 @@ function App() {
         </div>
 
         <h2>Tickets</h2>
-        <div className="card" style={{display:"flex", alignItems:"center",justifyContent:"flex-start"}}>
-
-          {ticketsList.map((ticket)=>{
+        <div
+          className="card"
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "left",
+          }}
+        >
+          {filteredTickets.map((ticket) => {
             return (
-              <div style={{border:"2px solid black", padding:"5px"}}>
-                <p>{ticket.description}</p>
-                <p>Created by:{ticket.createdBy}</p>
-                <p>Priority : {ticket.priority}</p>
-                <button>Delete</button>
-              </div>
-            )
+              <Card
+                key={ticket._id}
+                id={ticket._id}
+                description={ticket.description}
+                createdBy={ticket.createdBy}
+                priority={ticket.priority}
+                onDelete={() => handleDelete(ticket._id)}
+              />
+            );
           })}
         </div>
       </div>
